@@ -1,12 +1,73 @@
+import re
 import threading
 import os
 
 import requests
 from bs4 import BeautifulSoup
 
-DOMINIO = "https://mangalivre.blog/manga/solo-leveling-ragnarok/"
-
 LINKS = []
+
+#https://mangalivre.blog/manga/isekai-meikyuu-de-harem-wo/
+
+def pedir_manga():
+    while True:
+        manga_escolhido = input("Insira o link do manga escolhido para download dos capítulos: ")
+        resposta = requisicao(manga_escolhido)
+        if not resposta:
+            print("Não foi possível acessar esse link. Tente novamente.")
+            continue
+
+        soup = parsing(resposta)
+        if not soup:
+                ("Não foi possível interpretar a página!")
+                continue
+        links = encontrar_links(soup)
+        if not links:
+            print("Nenhum capítulo encontrado, valide o link inserido!")
+
+        print(f"\nCapítulos encontrados: {len(links)}")
+        return links
+
+
+def encontrar_capitulo(lista_de_capitulos, numero):
+    for link in lista_de_capitulos:
+        if f"capitulo-{numero}/" in link:
+            return link
+
+    return None
+
+
+def menu(lista_de_capitulos):
+    while True:
+        print("\n--- MENU ---")
+        print("1 - Baixar todos")
+        print("2 - Baixar capítulo específico")
+        print("0 - Sair")
+
+        opcao = input("Escolha: ")
+
+        if opcao == "1":
+            return lista_de_capitulos
+
+        elif opcao == "2":
+            numero = input("Número do capítulo: ")
+
+            link_encontrado = encontrar_capitulo(
+                lista_de_capitulos,
+                numero
+            )
+
+            if link_encontrado:
+                return [link_encontrado]
+
+            else:
+                print("Capítulo não encontrado")
+
+        elif opcao == "0":
+            return None
+
+        else:
+            print("Opção inválida")
 
 
 def requisicao(url):
@@ -71,6 +132,7 @@ def descobrir_imagem():
             return
 
         resposta_capitulo = requisicao(link_capitulo) 
+
         if resposta_capitulo:
             soup_capitulo = parsing(resposta_capitulo)
 
@@ -105,18 +167,17 @@ def baixar_imagem(url, pasta, numero):
         print(erro)
 
 
+if __name__ == "__main__":
+    LINKS_ENCONTRADOS = pedir_manga()
 
-resposta_busca = requisicao(DOMINIO)
-if resposta_busca:
-    soup_busca = parsing(resposta_busca)
+    LINKS = menu(LINKS_ENCONTRADOS)
 
-    if soup_busca:
-        LINKS = encontrar_links(soup_busca)
-        print("Capítulos encontrados:", len(LINKS))
-
+    if LINKS:
         THREADS = []
 
-        for i in range(14):
+        quantidade_threads = min(14, len(LINKS))
+
+        for _ in range(quantidade_threads):
             t = threading.Thread(target=descobrir_imagem)
             THREADS.append(t)
 
@@ -125,3 +186,5 @@ if resposta_busca:
 
         for t in THREADS:
             t.join()
+
+        print("\nDownload concluído.")
