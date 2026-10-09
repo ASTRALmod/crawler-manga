@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 
 LINKS = []
 
-#https://mangalivre.blog/manga/isekai-meikyuu-de-harem-wo/
+#https://mangalivre.blog/manga/...
 
 def pedir_manga():
     while True:
